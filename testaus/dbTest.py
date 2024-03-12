@@ -15,11 +15,11 @@ cursor.execute('''
 ''')
 
 def savePlayer(name, score, gameID):
-  cursor.execute('INSERT INTO scores (name, score, gameID) VALUES (?, ?, ?)', (name, score, gameID))
+  cursor.execute('INSERT INTO scores (name, points, gameID) VALUES (?, ?, ?)', (name, score, gameID))
   connection.commit()
 
-def getPlayer(name, gameID):
-  cursor.execute('SELECT * FROM scores WHERE name = ?', (name,))
+def getPlayer(name):
+  cursor.execute('SELECT * FROM scores WHERE name = ?', (name,))#ei toimi, jos ei oo tuota commaa tossa
   playerData = cursor.fetchone()
   return playerData
 
@@ -37,8 +37,16 @@ def makeTestData():
 
   for player in players:
     savePlayer(player[0], player[1], player[2])
-    
+
 def resetDB():
   pass
+
+
+makeTestData()
+akuData = getPlayer("AKU")
+print(akuData)
+
+#TODO testaa hakea kaikki tiedot
+#
 
 connection.close()
