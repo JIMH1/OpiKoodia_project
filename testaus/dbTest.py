@@ -30,7 +30,7 @@ def getHighScoreForGame(game):#tää hakis kaikki tiedot kannasta, sorttaa sen p
   return data#
 
 def getPersonalHighScores(playerName, gameID):
-  cursor.execute('SELECT * FROM scores where name = ? AND gameID = ?', playerName, gameID)
+  cursor.execute('SELECT * FROM scores WHERE name = ? AND gameID = ?', (playerName, gameID))
   data = cursor.fetchall()
   return data
 
@@ -57,10 +57,22 @@ def makeTestData():
     savePlayer(player[0], player[1], player[2])
 
 def resetDB():
-  pass
+  #poista HUOM TÄÄ OIKEESTI POISTAA!!!
+  cursor.execute('DROP TABLE IF EXISTS scores;')
+  connection.commit()
 
+  #tee uusiks
+  cursor.execute('''
+    CREATE TABLE IF NOT EXISTS scores (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      points INTEGER,
+      gameID INTEGER
+    );
+  ''')
 
-makeTestData()
+#resetDB()#pyöritä kerran, sit kommentteihin
+#makeTestData()#hups tää jäi pyörimään läpi testauksen, johti siihen, että on hirveesti roinaa tietokanssassa
 #akuData = getPlayer("AKU")
 #print(akuData)
 
@@ -72,9 +84,8 @@ makeTestData()
 #TODO testaa hakea kaikki tiedot
 #
 
-asd = getPersonalHighScores('AKU', '1')#ei toimi
+asd = getPersonalHighScores('KARHUKOPLA', '1')#TOIMII
 print(asd)
-
 
 
 
