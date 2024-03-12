@@ -30,9 +30,17 @@ def makeTestData():
   #("AKU", 100, 1),
   players = [
     ("AKU", 100, 1),
-    ("TUP", 101, 1),
-    ("HUP", 102, 1),
-    ("LUP", 103, 1),
+    ("TUPU", 101, 1),
+    ("HUPU", 102, 1),
+    ("LUPU", 103, 1),
+    ("ROOPE", 104, 1),
+    ("MIKKI", 105, 1),
+    ("HESSU", 106, 1),
+    ("IINES", 107, 1),
+    ("KEKSIJÄ", 108, 1),
+    ("MATAMI MIMMI", 109, 1),
+    ("AKUN NAAPURI", 110, 1),
+    ("KARHUKOPLA", 111, 1),
   ]
 
   for player in players:
