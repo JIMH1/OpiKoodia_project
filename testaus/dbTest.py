@@ -26,11 +26,14 @@ def getPlayer(name):
 def getHighScoreForGame(game):#tää hakis kaikki tiedot kannasta, sorttaa sen pelin ja ennenkaikkea pisteiden kautta, sit valitsee sieltä vaikka top10 printattavaks
   cursor.execute('SELECT * FROM scores WHERE gameID = ?', game)
   data = cursor.fetchall()
-  print(data)#testiin
+  #print(data)#testiin
   return data#
 
-def getPersonalHighScores():
-  pass
+def getPersonalHighScores(playerName, gameID):
+  cursor.execute('SELECT * FROM scores where name = ? AND gameID = ?', playerName, gameID)
+  data = cursor.fetchall()
+  return data
+
 def makeTestData():
   #("AKU", 100, 1),
   players = [
@@ -61,12 +64,18 @@ makeTestData()
 #akuData = getPlayer("AKU")
 #print(akuData)
 
-ykkösdata = getHighScoreForGame('1')#vaikka tää on INT kannassa, pitää vissii syöttää tekstinä jostain syystä
-kakkosdata = getHighScoreForGame('2')#vaikka tää on INT kannassa, pitää vissii syöttää tekstinä jostain syystä
-print(ykkösdata)
-print(kakkosdata)
+#ykkösdata = getHighScoreForGame('1')#vaikka tää on INT kannassa, pitää vissii syöttää tekstinä jostain syystä
+#kakkosdata = getHighScoreForGame('2')#vaikka tää on INT kannassa, pitää vissii syöttää tekstinä jostain syystä
+#print(ykkösdata)
+#print(kakkosdata)
 
 #TODO testaa hakea kaikki tiedot
 #
+
+asd = getPersonalHighScores('AKU', '1')#ei toimi
+print(asd)
+
+
+
 
 connection.close()
