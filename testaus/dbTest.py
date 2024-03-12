@@ -26,4 +26,19 @@ def getPlayer(name, gameID):
 def getHighScore():#tää hakis kaikki tiedot kannasta, sorttaa sen pelin ja ennenkaikkea pisteiden kautta, sit valitsee sieltä vaikka top10 printattavaks
   pass
 
+def makeTestData():
+  #("AKU", 100, 1),
+  players = [
+    ("AKU", 100, 1),
+    ("TUP", 101, 1),
+    ("HUP", 102, 1),
+    ("LUP", 103, 1),
+  ]
+
+  for player in players:
+    savePlayer(player[0], player[1], player[2])
+    
+def resetDB():
+  pass
+
 connection.close()
