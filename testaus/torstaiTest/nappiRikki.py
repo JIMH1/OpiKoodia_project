@@ -45,7 +45,7 @@ ledStates = {
 
 
 #SQL STUFF
-def savePlayer(nimi, pojot):
+def savePlayerReact(nimi, pojot):
     connection = sqlite3.connect('test.db')
     cursor = connection.cursor()
     
@@ -64,7 +64,7 @@ def savePlayer(nimi, pojot):
     
     connection.close()
     
-def getPlayer(nimi):
+def getPlayerReact(nimi):
     connection = sqlite3.connect('test.db')
     cursor = connection.cursor()
     
@@ -80,6 +80,16 @@ def getPlayer(nimi):
     playerData = cursor.fetchone()
     connection.close
     return playerData
+
+def highScoreReact(määrä):
+    connection = sqlite3.connect('test.db')
+    cursor = connection.cursor()
+
+    cursor.execute('SELECT name, MAX(points) from test GROUP BY name ORDER BY points DESC LIMIT ?', (määrä,) )
+    data = cursor.fetchall()
+
+    connection.close()
+    return data
 
 #LEDSTUFF
 def turnOnLed(ledPin):
@@ -149,7 +159,7 @@ def playReaction(playerName):
                     time = endTime - startTime
                     score = timeToPoints()
                     print(score)
-                    savePlayer(playerName, str(score))
+                    savePlayerReact(playerName, str(score))
                     return
                     break
             
@@ -167,7 +177,7 @@ def playReaction(playerName):
                     time = endTime - startTime
                     score = timeToPoints()
                     print(score)
-                    savePlayer(playerName, score)
+                    savePlayerReact(playerName, score)
                     return
                     break
                 
@@ -185,15 +195,15 @@ def playReaction(playerName):
                     time = endTime - startTime
                     score = timeToPoints()
                     print(score)
-                    savePlayer(playerName, score)
+                    savePlayerReact(playerName, score)
                     return
                     break
             
         
     print("outside loop")
     sleep(1)
-    savePlayer(playerName, str(score))
-    data = getPlayer(playerName)
+    savePlayerReact(playerName, str(score))
+    data = getPlayerReact(playerName)
     print(data)
     
 #MAIN MENU LOGIC
@@ -205,7 +215,7 @@ def mainMenu():
     print(f"your name is {playerName}")
     sleep(delay)
     
-    data = getPlayer(playerName)
+    data = getPlayerReact(playerName)
     print(data)
     
     
@@ -213,6 +223,8 @@ def mainMenu():
         
         sleep(delay)
         print("choose game...")
+
+        #DEBUGGING
         sleep(delay)
         readVal1 = GPIO.input(firstButton)
         print(readVal1)
@@ -230,19 +242,23 @@ def mainMenu():
         if readVal1 == 0:
  
             sleep(delay)
+            #menuReact()
             playReaction(playerName)
             #print("react")
             sleep(delay)
         elif readVal2 == 0:
+            #menuSimon()
             playSimonSays(playerName)
             #print("simon")
             sleep(delay)
         elif readVal3 == 0:
+            menuPlaceholder()
             #playThirdGame(playerName)
             print("placeholder")
             sleep(delay)
         elif readVal4 == 0:
             print("exiting")
+            #return #TÄTÄ vois testata 
 
 #GAME TWO LOGIC
 def playSimonSays(playerName):
@@ -406,9 +422,59 @@ def compareSeqs(sequence, playerSequence):
         sleep(2)
         return False
     
+def setupGPIO(redLed, yellowLed, blueLed, firstButton, secondButton, thirdButton, resetButton):
+    GPIO.setup(redLed, GPIO.OUT)
+    GPIO.setup(yellowLed, GPIO.OUT)
+    GPIO.setup(blueLed, GPIO.OUT)
+
+    GPIO.setup(firstButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(secondButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(thirdButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(resetButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+
+def menuPlaceholder(name):
+    while True:
+        print("choose 1 for game, 2 for personalHigh, 3 for highScore...")
+        
+        readVal1 = GPIO.input(firstButton)
+        readVal2 = GPIO.input(secondButton)
+        readVal3 = GPIO.input(thirdButton)
+
+        if readVal1 == 0:
+            playPlaceholder(name)
+            sleep(delay)
+            return
+            
+        elif readVal2 == 0:
+            playerData = getPlayerPlaceholder(nimi)
+            print(playerData)
+            sleep(delay)
+            return
+            
+        elif readVal3 == 0:
+            hiScoreData = highScorePlaceholder()
+            print(hiScoreData)
+            sleep(delay)
+            return
 
 
 
 
+def playPlaceholder(playerName):
+    print(f"welcome to placeholder, {playerName}")
+    sleep(5)
+    return
 
+def getPlayerPlaceholder(playerName):
+    #SQL LOGIC
+    print(f"successfully entered second test branch, {playerName}")
+    sleep(5)
+    return
+
+def highScorePlaceholder():
+    #SQL happens here
+    print(f"successfully entered third test branch")
+    sleep(5)
+    return
 mainMenu()
