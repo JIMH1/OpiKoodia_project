@@ -90,6 +90,46 @@ def highScoreReact(määrä):
 
     connection.close()
     return data
+    
+#94-133 uutta matskua, täytyy muuttaa funkkarien kutsut peleissä
+def savePlayerScore(game, player_name, points, date):
+    connection = sqlite3.connect('test.db')
+    cursor = connection.cursor()
+    
+    # Create table for the game if it doesn't exist
+    cursor.execute(f'''
+      CREATE TABLE IF NOT EXISTS {game} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        points INTEGER,
+        date TEXT
+      );
+    ''')
+    
+    cursor.execute(f'INSERT INTO {game} (name, points, date) VALUES (?, ?, ?)', (player_name, points, date))
+    connection.commit()
+    
+    connection.close()
+    
+def getPlayerScore(game, player_name):
+    connection = sqlite3.connect('test.db')
+    cursor = connection.cursor()
+    
+    cursor.execute(f'SELECT * FROM {game} WHERE name = ?', (player_name,))
+    playerData = cursor.fetchone()
+    
+    connection.close()
+    return playerData
+
+def getHighScores(game, limit):
+    connection = sqlite3.connect('test.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f'SELECT name, MAX(points) FROM {game} GROUP BY name ORDER BY points DESC LIMIT ?', (limit,))
+    data = cursor.fetchall()
+
+    connection.close()
+    return data
 
 #LEDSTUFF
 def turnOnLed(ledPin):
