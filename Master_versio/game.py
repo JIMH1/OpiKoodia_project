@@ -53,12 +53,12 @@ ledStates = {
 
 
 #SQL STUFF
-def savePlayer(nimi, pojot):
+def savePlayer(peli, nimi, pojot):
     connection = sqlite3.connect('test.db')
     cursor = connection.cursor()
     
-    cursor.execute('''
-      CREATE TABLE IF NOT EXISTS test (
+    cursor.execute(f'''
+      CREATE TABLE IF NOT EXISTS {peli} (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         points INTEGER
@@ -67,27 +67,37 @@ def savePlayer(nimi, pojot):
     
     
     
-    cursor.execute('INSERT INTO test (name, points) VALUES (?, ?)', (nimi, pojot))
+    cursor.execute(f'INSERT INTO {peli} (name, points) VALUES (?, ?)', (nimi, pojot))
     connection.commit()
     
     connection.close()
     
-def getPlayer(nimi):
+def getPlayer(peli, nimi):
     connection = sqlite3.connect('test.db')
     cursor = connection.cursor()
     
-    cursor.execute('''
-      CREATE TABLE IF NOT EXISTS test (
+    cursor.execute(f'''
+      CREATE TABLE IF NOT EXISTS {peli} (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         points INTEGER
       );
     ''')
     
-    cursor.execute('SELECT * FROM test WHERE name = ?', (nimi,) )
+    cursor.execute(f'SELECT * FROM {peli} WHERE name = ?', (nimi,) )
     playerData = cursor.fetchone()
     connection.close
     return playerData
+
+def getHighScores(peli, limit):#tää ehkä aika pieni koska vaan 2 riviä näytöllä
+    connection = sqlite3.connect('test.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f'SELECT name, MAX(points) FROM {peli} GROUP BY name ORDER BY points DESC LIMIT ?', (limit,))
+    data = cursor.fetchall()
+
+    connection.close()
+    return data
 
 #LEDSTUFF
 def turnOnLed(ledPin):
@@ -121,7 +131,7 @@ def allLedOff():
     
 #GAMEONE LOGIC
 def generateName():
-    return random.choice(["EBA", "ABE", "AKU", "TIM", "BOB", "SAM", "IKE", "OBI", "LEE", "MOE"])
+    return random.choice(["EBA", "ABE", "AKU", "TIM", "BOB", "SAM", "IKE", "OBI", "LEE", "MOE", "JMH"])
 
 def timeToPoints(secs, micro):#logiikka puuttuu
     #points = random.choice([50, 100, 150, 200, 250])
@@ -137,6 +147,12 @@ def playReaction(playerName):
     lcd.clear()
     lcdPrint(f"Welcome, {playerName}", 0.1)#TOIMII
     print(f"Welcome to reaction, {playerName}")
+    
+    aiempiData = getPlayer("react", playerName)#samalla nimimerkillä aiemmin pelattu reaction
+    lcdPrint(aiempiData, 2)
+    reactHiScore = getHighScores("react", 1)#Näin alkuun vaan 1 rivi riittänee
+    
+    lcdPrint(f"The high score is: \n{reactHiScore}", 2)
     
     while True:
       lcdPrint("When alight,\n\rpress button", 0.1)#TOIMII
@@ -171,7 +187,7 @@ def playReaction(playerName):
                     print(score)
                     #lcdPrint(f"Score: \n\r{score}", 2)
                     lcdPrint(f"Score: \n\r{score} secs", 5)
-                    savePlayer(playerName, str(score))
+                    savePlayer("react", playerName, str(score))
                     return
                     break
             
@@ -195,7 +211,7 @@ def playReaction(playerName):
                     print(score)
                     #lcdPrint(f"Score: \n\r{score}", 2)
                     lcdPrint(f"Score: \n\r{score} secs", 5)
-                    savePlayer(playerName, score)
+                    savePlayer("react", playerName, str(score))
                     lcd.clear()
                     return
                     break
@@ -219,14 +235,14 @@ def playReaction(playerName):
                     print(score)
                     #lcdPrint(f"Score: \n\r{score}", 2)
                     lcdPrint(f"Score: \n\r{score} secs", 5)
-                    savePlayer(playerName, score)
+                    savePlayer("react", playerName, str(score))
                     return
                     break
             
         
-    print("outside loop")
+    #print("outside loop")
     sleep(1)
-    savePlayer(playerName, str(score))
+    #savePlayer(playerName, str(score))
     data = getPlayer(playerName)
     print(data)
     
@@ -291,11 +307,20 @@ def playSimonSays(playerName):
     lcdPrint(f"Welcome to simon\n\r{playerName}", 0.1)#TOIMII
     print(f"Welcome to simon says, {playerName}")
     
-    
     mistakes = 1
     limit = 2
     speed = 2
-    minSpeed = 0.5
+    minSpeed = 0.4
+    score = 0
+
+        
+    aiempiData = getPlayer("simon", playerName)#samalla nimimerkillä aiemmin pelattu reaction TÄSSÄ SAATTAA KAATUA, KOSKA AIEMPAA DATAA EI OO
+    lcdPrint(aiempiData, 2)
+    simonHiScore = getHighScores("simon", 1)#Näin alkuun vaan 1 rivi riittänee
+    
+    lcdPrint(f"The high score is: \n{simonHiScore}", 2)
+    
+    lcdPrint(f"You have {mistakes} attempts. On successful tries, the game will speed up from an initial {speed} down to a minimum {minSpeed}", 3)
     
     ledArr = [redLed, yellowLed, blueLed]
     buttonArr = [firstButton, secondButton, thirdButton]
@@ -321,6 +346,7 @@ def playSimonSays(playerName):
     
         if booleanVal:
             sequence = addToSeq(sequence, ledArr)
+            score += 1
             print(sequence)
         else:
             
@@ -329,6 +355,8 @@ def playSimonSays(playerName):
     lcdPrint("kiitos pelista", 3)
     print("kiitos pelistä")
     #SQL stuff
+    
+    savePlayer("simon", playerName, str(score))
     
 def genSeq(ledArray): #length
     sequence = []
@@ -441,13 +469,13 @@ def traslateButtonsToLed(buttonPresses):
 
 def compareSeqs(sequence, playerSequence):
     if sequence == playerSequence:
-        lcdPrint("YES!!!", 1)
+        lcdPrint("Success!", 1)
         print("YES!!!")
         #speedUp(speed, minSpeed)#TOIMIIKO?
         sleep(2)
         return True
     else:
-        lcdPrint("NO!!!", 1)
+        lcdPrint("Wrong sequence!", 1)
         print("NO!!!")
         #speedUp(speed, minSpeed)
         sleep(2)
