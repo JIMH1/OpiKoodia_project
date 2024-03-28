@@ -189,7 +189,7 @@ def playReaction(playerName):
                     lcdPrint(f"Score: \n\r{score} secs", 5)
                     savePlayer("react", playerName, str(score))
                     return
-                    break
+                    
             
         elif GPIO.input(secondButton) == 0 and randomLed == yellowLed:#and randomLed == outpin2
                 if GPIO.input(secondButton) == 1:
@@ -214,7 +214,7 @@ def playReaction(playerName):
                     savePlayer("react", playerName, str(score))
                     lcd.clear()
                     return
-                    break
+                    
                 
         elif GPIO.input(thirdButton) == 0 and randomLed == blueLed:#and randomLed == outpin2
                 if GPIO.input(thirdButton) == 1:
@@ -237,7 +237,7 @@ def playReaction(playerName):
                     lcdPrint(f"Score: \n\r{score} secs", 5)
                     savePlayer("react", playerName, str(score))
                     return
-                    break
+                    
             
         
     #print("outside loop")
@@ -357,6 +357,7 @@ def playSimonSays(playerName):
     #SQL stuff
     
     savePlayer("simon", playerName, str(score))
+    return
     
 def genSeq(ledArray): #length
     sequence = []
@@ -503,6 +504,83 @@ def lcdPrint(teksti, kesto):
         lcd.clear()
         return
     
+def secondaryMenu(playerName):
+    lcd.clear()
+    lcdPrint("Press 1, 2 or 3 to choose a game", 2)
+    lcdPrint("1: KSP 2: placeHolder 3:placeHolder", 2)
+     
+    while True:
+        sleep(delay)
+        
+        readVal1 = GPIO.input(firstButton)
+        readVal2 = GPIO.input(secondButton)
+        readVal3 = GPIO.input(thirdButton)
+      
+        
+        sleep(delay)
+        
+        
+        
+        if readVal1 == 1:
+            sleep(delay)
+            
+            playKSP(playerName)
+            return
+        elif readVal2 == 1:
+            sleep(delay)
+            
+            lcdPrint("placeHolder", 3)
+            return
+        elif readVal3 == 1:
+            sleep(delay)
+            
+            lcdPrint("placeHolder", 3)
+            return
 
 
+def playKSP(playerName):
+    arrKSP = ["rock", "paper", "scissors"]
+
+    compChoice = random.choice(arrKSP)
+    
+    lcdPrint(f"{playerName}, make your fateful choice...", 3)
+
+    lcdPrint("1: rock, 2: paper, 3: scissors.", 3)
+
+    while True:
+        readVal1 = GPIO.input(firstButton)
+        readVal2 = GPIO.input(secondButton)
+        readVal3 = GPIO.input(thirdButton)
+
+        if readVal1 == 1:
+            lcdPrint(compareChoices("rock", compChoice))
+        elif readVal2 == 1:
+            lcdPrint(compareChoices("paper", compChoice))
+        elif readVal3 == 1:
+            lcdPrint(compareChoices("scissors", compChoice))
+
+    return
+    
+def compareChoices(el1, el2):
+    if el1 == el2:
+        return "Draw! Both players live to see another day..."
+        
+    elif el1 == "rock":
+        if el2 == "scissors":
+            return "You win! Rock crushes scissors!"
+        else:
+            return "You lose! Rock is covered by paper!"
+            
+    elif el1 == "paper":
+        if el2 == "scissors":
+            return "You lose! Paper is reduced to confetti by scissors!"
+        else:
+            return "You win! Paper cuts rock with such precision that rock doesn't even realize it. What a masterful cut!!!"
+            
+    elif el1 == "scissors":
+        if el2 == "paper":
+            return "You win! Scissors make short work of paper!"
+        else:
+            return "You lose! Rock, a kind soul, spares your life but leaves you crippled, unable to cut ever again."
+            
 mainMenu()
