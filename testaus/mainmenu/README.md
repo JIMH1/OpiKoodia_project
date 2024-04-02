@@ -1,1 +1,0 @@
-Näppäimistöllä toimiva mainmenun pohja.
