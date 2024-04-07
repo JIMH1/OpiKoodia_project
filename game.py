@@ -4,12 +4,12 @@ import random
 import RPi.GPIO as GPIO
 import sqlite3
 
-from RPLCD.gpio import CharLCD #this code is for 16 pins connection
-#from RPLCD.i2c import CharLCD #this code is for I2C adapter
+from RPLCD.gpio import CharLCD
+from RPLCD.i2c import CharLCD
 from RPi import GPIO
 
-lcd = CharLCD(cols=16, rows=2, pin_rs=22, pin_e=18, pins_data=[16, 11, 12, 15], numbering_mode=GPIO.BOARD) #this code is for 16 pins connection
-#lcd = CharLCD(i2c_expander='PCF8574', address=0x27, port=1, cols=16, rows=2, dotsize=8) #this code is for I2C adapter
+lcd = CharLCD(cols=16, rows=2, pin_rs=22, pin_e=18, pins_data=[16, 11, 12, 15], numbering_mode=GPIO.BOARD)
+lcd = CharLCD(i2c_expander='PCF8574', address=0x27, port=1, cols=16, rows=2, dotsize=8)
 
 
 #DEFINITIONS, CONSTANTS
@@ -17,6 +17,8 @@ delay = 0.1
 redLed = 37
 yellowLed = 35
 blueLed = 33
+
+resetButton = 31
 
 firstButton = 40
 secondButton = 38
@@ -32,6 +34,7 @@ GPIO.setup(blueLed, GPIO.OUT)
 GPIO.setup(firstButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(secondButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(thirdButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(resetButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 
 #funkkariks
@@ -51,7 +54,7 @@ ledStates = {
 
 #SQL STUFF
 def savePlayer(peli, nimi, pojot):
-    connection = sqlite3.connect('game.db')
+    connection = sqlite3.connect('test.db')
     cursor = connection.cursor()
     
     cursor.execute(f'''
@@ -70,7 +73,7 @@ def savePlayer(peli, nimi, pojot):
     connection.close()
     
 def getPlayer(peli, nimi):
-    connection = sqlite3.connect('game.db')
+    connection = sqlite3.connect('test.db')
     cursor = connection.cursor()
     
     cursor.execute(f'''
@@ -87,7 +90,7 @@ def getPlayer(peli, nimi):
     return playerData
 
 def getHighScores(peli, limit):#tää ehkä aika pieni koska vaan 2 riviä näytöllä
-    connection = sqlite3.connect('game.db')
+    connection = sqlite3.connect('test.db')
     cursor = connection.cursor()
 
     cursor.execute(f'SELECT name, MAX(points) FROM {peli} GROUP BY name ORDER BY points DESC LIMIT ?', (limit,))
@@ -142,13 +145,11 @@ def timeToPoints(secs, micro):#logiikka puuttuu
 
 def playReaction(playerName):
     lcd.clear()
-    lcdPrint(f"Welcome, {playerName}", 3)
+    lcdPrint(f"Welcome, {playerName}", 0.1)#TOIMII
     print(f"Welcome to reaction, {playerName}")
     
     aiempiData = getPlayer("react", playerName)#samalla nimimerkillä aiemmin pelattu reaction
-    aiempiData = None #tämä ja alempi koodi mahdollistaa tilanteen jossa tietokantaan ei ole tallentunut aikasempaa suoritusta
-    if aiempiData is not None:
-        lcdPrint(aiempiData, 2)
+    lcdPrint(aiempiData, 2)
     reactHiScore = getHighScores("react", 1)#Näin alkuun vaan 1 rivi riittänee
     
     lcdPrint(f"The high score is: \n{reactHiScore}", 2)
@@ -248,11 +249,11 @@ def playReaction(playerName):
 #MAIN MENU LOGIC
 def mainMenu():
     lcd.clear()
-    lcdPrint("Welcome to the \n\rmain menu of \n\r team Kokkola \n\rproject", 3)#TOIMII
+    lcdPrint("Welcome to the \n\rmain menu of \n\r team Kokkola \n\rproject", 0.1)#TOIMII
     print("Welcome to the main menu of opikoodia Kokkola")
     
     playerName = generateName()
-    lcdPrint(f"Your name \n\ris {playerName}", 3)#TOIMII
+    lcdPrint(f"Your name \n\ris {playerName}", 0.1)#TOIMII
     print("Since we dont have a keyboard, we will randomly assign you a name")
     
     
@@ -260,7 +261,7 @@ def mainMenu():
     
     sleep(delay)
     
-    data = getPlayer("react", playerName)
+    data = getPlayer(playerName)
     print(data)
     
     
@@ -268,10 +269,10 @@ def mainMenu():
         
         sleep(delay)
         
-        lcdPrint("Choose by\n\rpressing buttons", 3)
-        print("Pls choose game by pressing a button 1 = reaction 2 = simon 3 = secondary game menu")
-        lcdPrint("1 for react\n\r2 for simon", 3)
-        lcdPrint("3 for more games", 3)
+        lcdPrint("Choose by\n\rpressing buttons", 0.1)#TOIMII
+        print("Pls choose game by pressing a button 1 = reaction 2 = simon 3 = placeholder")
+        lcdPrint("1 for react\n\r2 for simon", 0.1)#TOIMII
+        #lcdPrint("3 for X", 2)
         
         sleep(delay)
         readVal1 = GPIO.input(firstButton)
@@ -296,14 +297,14 @@ def mainMenu():
             #print("simon")
             sleep(delay)
         elif readVal3 == 1:
-            secondaryMenu(playerName)
-            #print("more games")
+            #playThirdGame(playerName)
+            print("placeholder")
             sleep(delay)
 
 
 #GAME TWO LOGIC
 def playSimonSays(playerName):
-    lcdPrint(f"Welcome to simon\n\r{playerName}", 3)
+    lcdPrint(f"Welcome to simon\n\r{playerName}", 0.1)#TOIMII
     print(f"Welcome to simon says, {playerName}")
     
     mistakes = 1
@@ -313,15 +314,13 @@ def playSimonSays(playerName):
     score = 0
 
         
-    aiempiData = getPlayer("simon", playerName)
-    aiempiData = None
-    if aiempiData is not None:
-        lcdPrint(aiempiData, 2)
+    aiempiData = getPlayer("simon", playerName)#samalla nimimerkillä aiemmin pelattu reaction TÄSSÄ SAATTAA KAATUA, KOSKA AIEMPAA DATAA EI OO
+    lcdPrint(aiempiData, 2)
     simonHiScore = getHighScores("simon", 1)#Näin alkuun vaan 1 rivi riittänee
     
-    lcdPrint(f"The high score is: \n{simonHiScore}", 3)
+    lcdPrint(f"The high score is: \n{simonHiScore}", 2)
     
-    lcdPrint(f"You have\n\r{mistakes} attempts.\n\rOn successful\n\rtries, the game\n\rwill speed up\n\rfrom an initial\n\r{speed} down to\n\ra minimum\n\r{minSpeed}", 3)
+    lcdPrint(f"You have {mistakes} attempts. On successful tries, the game will speed up from an initial {speed} down to a minimum {minSpeed}", 3)
     
     ledArr = [redLed, yellowLed, blueLed]
     buttonArr = [firstButton, secondButton, thirdButton]
@@ -353,8 +352,8 @@ def playSimonSays(playerName):
             
             mistakes += 1
     
-    lcdPrint("Thanks for the game", 3)
-    print("Thanks for the game")
+    lcdPrint("kiitos pelista", 3)
+    print("kiitos pelistä")
     #SQL stuff
     
     savePlayer("simon", playerName, str(score))
@@ -471,13 +470,13 @@ def traslateButtonsToLed(buttonPresses):
 
 def compareSeqs(sequence, playerSequence):
     if sequence == playerSequence:
-        lcdPrint("Success!", 3)
+        lcdPrint("Success!", 1)
         print("YES!!!")
         #speedUp(speed, minSpeed)#TOIMIIKO?
         sleep(2)
         return True
     else:
-        lcdPrint("Wrong sequence!", 3)
+        lcdPrint("Wrong sequence!", 1)
         print("NO!!!")
         #speedUp(speed, minSpeed)
         sleep(2)
@@ -507,9 +506,8 @@ def lcdPrint(teksti, kesto):
     
 def secondaryMenu(playerName):
     lcd.clear()
-    lcdPrint("Welcome to sub menu", 3)
-    lcdPrint("Press 1, 2 or 3 to choose a game", 3)
-    lcdPrint("1: KSP 2: placeHolder 3:placeHolder", 3)
+    lcdPrint("Press 1, 2 or 3 to choose a game", 2)
+    lcdPrint("1: KSP 2: placeHolder 3:placeHolder", 2)
      
     while True:
         sleep(delay)
@@ -545,9 +543,9 @@ def playKSP(playerName):
 
     compChoice = random.choice(arrKSP)
     
-    lcdPrint(f"{playerName}, make\n\r your fateful choice...", 3)
+    lcdPrint(f"{playerName}, make your fateful choice...", 3)
 
-    lcdPrint("1: rock, 2: paper, \n\r 3: scissors.", 3)
+    lcdPrint("1: rock, 2: paper, 3: scissors.", 3)
 
     while True:
         readVal1 = GPIO.input(firstButton)
@@ -555,11 +553,11 @@ def playKSP(playerName):
         readVal3 = GPIO.input(thirdButton)
 
         if readVal1 == 1:
-            lcdPrint(compareChoices("rock", compChoice), 3)
+            lcdPrint(compareChoices("rock", compChoice))
         elif readVal2 == 1:
-            lcdPrint(compareChoices("paper", compChoice), 3)
+            lcdPrint(compareChoices("paper", compChoice))
         elif readVal3 == 1:
-            lcdPrint(compareChoices("scissors", compChoice), 3)
+            lcdPrint(compareChoices("scissors", compChoice))
 
     return
     
@@ -569,20 +567,20 @@ def compareChoices(el1, el2):
         
     elif el1 == "rock":
         if el2 == "scissors":
-            return "You win!\n\r Rock crushes scissors!"
+            return "You win! Rock crushes scissors!"
         else:
-            return "You lose!\n\rRock is covered by paper!"
+            return "You lose! Rock is covered by paper!"
             
     elif el1 == "paper":
         if el2 == "scissors":
-            return "You lose!\n\rPaper is reduced\n\rto confetti by scissors!"
+            return "You lose! Paper is reduced to confetti by scissors!"
         else:
-            return "You win!\n\rPaper cuts rock with\n\rsuch precision that rock\n\rdoesn't even realize it.\n\rWhat a masterful cut!!!"
+            return "You win! Paper cuts rock with such precision that rock doesn't even realize it. What a masterful cut!!!"
             
     elif el1 == "scissors":
         if el2 == "paper":
-            return "You win!\n\rScissors make short work of paper!"
+            return "You win! Scissors make short work of paper!"
         else:
-            return "You lose!\n\rRock, a kind soul,\n\rspares your life but\n\rleaves you crippled,\n\runable to cut ever again."
+            return "You lose! Rock, a kind soul, spares your life but leaves you crippled, unable to cut ever again."
             
 mainMenu()
